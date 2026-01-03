@@ -9,8 +9,15 @@ interface PriceChartProps {
 export function PriceChart({ coin }: PriceChartProps) {
   const priceData = usePriceStream(coin);
 
+  // 첫 번째 유효한 가격(>0)이 들어온 후부터의 데이터만 사용
+  // 초기 연결 시의 0원 데이터는 제외하되, 이후 실제로 0원이 되는 경우는 포함
+  const firstValidIndex = priceData.findIndex((data) => data.price > 0);
+  const validPriceData = firstValidIndex >= 0
+    ? priceData.slice(firstValidIndex)
+    : [];
+
   // 가격 데이터가 없으면 로딩 표시
-  if (priceData.length === 0) {
+  if (validPriceData.length === 0) {
     return (
       <div className="flex items-center justify-center h-[300px] text-muted-foreground">
         가격 데이터를 불러오는 중...
@@ -18,8 +25,8 @@ export function PriceChart({ coin }: PriceChartProps) {
     );
   }
 
-  // 차트 데이터 생성
-  const chartData = priceData.map((data) => ({
+  // 차트 데이터 생성 (첫 유효 가격 이후의 모든 데이터 포함, 0원도 포함)
+  const chartData = validPriceData.map((data) => ({
     time: format(new Date(data.timestamp), 'HH:mm:ss'),
     timestamp: data.timestamp,
     가격: data.price,
