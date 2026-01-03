@@ -43,3 +43,15 @@ next-env.d.ts
 # trading data
 data/trade_history.json
 data/sessions.json
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
