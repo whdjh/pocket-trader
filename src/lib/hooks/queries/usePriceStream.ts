@@ -43,6 +43,17 @@ export function usePriceStream(coin: string) {
     // 클린업
     return () => {
       eventSource.close();
+      // 코인이 변경될 때만 초기화 (언마운트 시에는 초기화하지 않음)
+      if (eventSourceRef.current === null || eventSourceRef.current.readyState === EventSource.CLOSED) {
+        setPriceData([]);
+      }
+    };
+  }, [coin]);
+
+  // 코인 변경 시 데이터 초기화를 위한 별도 effect
+  useEffect(() => {
+    return () => {
+      setPriceData([]);
     };
   }, [coin]);
 

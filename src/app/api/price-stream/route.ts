@@ -25,12 +25,36 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      // 초기 연결 메시지
-      send({
-        symbol: coin,
-        price: 0,
-        timestamp: new Date().toISOString(),
-      });
+      // 즉시 첫 번째 가격 데이터 가져오기
+      const fetchAndSendPrice = async () => {
+        try {
+          const response = await fetch(
+            `https://api.bithumb.com/public/ticker/${coin}_KRW`,
+            {
+              cache: 'no-store',
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Bithumb API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (data.status === '0000' && data.data) {
+            send({
+              symbol: coin,
+              price: parseFloat(data.data.closing_price),
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching price:', error);
+        }
+      };
+
+      // 즉시 첫 번째 가격 가져오기
+      fetchAndSendPrice();
 
       // 주기적으로 빗썸 API 호출하여 가격 업데이트
       intervalId = setInterval(async () => {
