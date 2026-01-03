@@ -1,9 +1,9 @@
 import os
 import json
-import requests  # 뉴스 수집용
+import requests
 from dotenv import load_dotenv
-import python_bithumb # 빗썸 데이터 수집용
-from openai import OpenAI # OpenAI API 사용
+import python_bithumb
+from openai import OpenAI
 
 # .env 파일에서 API 키 로드
 load_dotenv()
@@ -74,10 +74,9 @@ def ai_trading():
                 **Task:** Based on BOTH technical analysis AND news sentiment/implications, decide whether to **buy**, **sell**, or **hold** Bitcoin.
 
                 **Output Format:** Respond ONLY in JSON format like the examples below.
-
-                Example (Buy): {"decision": "buy", "reason": "Price broke resistance (4h chart), supported by positive institutional adoption news."}
-                Example (Sell): {"decision": "sell", "reason": "Bearish divergence (daily chart), combined with negative regulatory news."}
-                Example (Hold): {"decision": "hold", "reason": "Consolidating price action, mixed news signals. Waiting for confirmation."}
+                {"decision": "buy", "percentage": 20, "reason": "some technical reason"}
+                {"decision": "sell", "percentage": 50, "reason": "some technical reason"}
+                {"decision": "hold", "percentage": 0, "reason": "some technical reason"}
                 """
             },
             {
@@ -92,5 +91,52 @@ def ai_trading():
     result = json.loads(response.choices[0].message.content)
     return result
 
-trading_decision = ai_trading()
-print(json.dumps(trading_decision, indent=4, ensure_ascii=False))
+# 트레이딩 실행 함수
+def execute_trade():
+    # AI 결정 얻기
+    result = ai_trading()
+    print(result)
+    
+    # 빗썸 API 연결
+    access = os.getenv("BITHUMB_ACCESS_KEY")
+    secret = os.getenv("BITHUMB_SECRET_KEY")
+    bithumb = python_bithumb.Bithumb(access, secret)
+
+    # 잔고 확인
+    my_krw = bithumb.get_balance("KRW")
+    my_btc = bithumb.get_balance("BTC")
+    current_price = python_bithumb.get_current_price("KRW-BTC")
+
+    # 결정 출력
+    print(f"### AI Decision: {result['decision'].upper()} ###")
+    print(f"### Reason: {result['reason']} ###")
+    
+    # 투자 비율 (0-100%)
+    percentage = result.get("percentage", 0) / 100
+    print(f"### Investment Percentage: {percentage*100}% ###")
+    
+    if result["decision"] == "buy":
+        amount = my_krw * percentage * 0.997  # 수수료 고려
+        
+        if amount > 5000:  # 최소 주문액 확인
+            print(f"### Buy Order: {amount:,.0f} KRW ###")
+            bithumb.buy_market_order("KRW-BTC", amount)
+        else:
+            print(f"### Buy Failed: Amount ({amount:,.0f} KRW) below minimum ###")
+
+    elif result["decision"] == "sell":
+        btc_amount = my_btc * percentage * 0.997  # 수수료 고려
+        value = btc_amount * current_price
+        
+        if value > 5000:  # 최소 주문액 확인
+            print(f"### Sell Order: {btc_amount} BTC ###")
+            bithumb.sell_market_order("KRW-BTC", btc_amount)
+        else:
+            print(f"### Sell Failed: Value ({value:,.0f} KRW) below minimum ###")
+
+    elif result["decision"] == "hold":
+        print("### Hold Position ###")
+
+# 실행
+if __name__ == "__main__":
+    execute_trade()
