@@ -6,6 +6,7 @@ import { useTrades } from '@/lib/hooks/queries/useTrades';
 import { ProfitChart } from '@/components/main/ProfitChart';
 import { PriceChart } from '@/components/main/PriceChart';
 import { TradeDetails } from '@/components/main/TradeDetails';
+import { CoinSearch } from '@/components/main/CoinSearch';
 
 export default function Home() {
   const { data: trades = [] } = useTrades();
@@ -14,7 +15,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Bitcoin AI Trading Dashboard</h1>
+      <h1 className="text-3xl font-bold">암호화폐 AI 트레이딩 대시보드</h1>
 
       {/* 거래 상세 정보 - 맨 상단 */}
       <Card>
@@ -42,29 +43,16 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* 코인 가격 차트 - 선택 가능 */}
+        {/* 코인 가격 차트 - 검색 가능 */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3">
               <CardTitle>가격 변화</CardTitle>
-              <select
-                value={selectedCoin}
-                onChange={(e) => setSelectedCoin(e.target.value)}
-                className="px-3 py-1 border rounded-md text-sm"
-              >
-                <option value="BTC">BTC</option>
-                <option value="ETH">ETH</option>
-                <option value="XRP">XRP</option>
-                <option value="ADA">ADA</option>
-                <option value="DOGE">DOGE</option>
-                <option value="SOL">SOL</option>
-                <option value="DOT">DOT</option>
-                <option value="MATIC">MATIC</option>
-              </select>
+              <CoinSearch selectedCoin={selectedCoin} onCoinChange={setSelectedCoin} />
             </div>
           </CardHeader>
           <CardContent>
-            <PriceChart coin={selectedCoin} trades={trades} />
+            <PriceChart coin={selectedCoin} />
           </CardContent>
         </Card>
       </div>
