@@ -2,7 +2,7 @@
 
 // User 타입
 export interface User {
-  pk: string;
+  pk: number;
   id: string;
   password: string;
   name: string;
