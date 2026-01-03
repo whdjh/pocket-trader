@@ -7,6 +7,7 @@ import { ProfitChart } from '@/components/main/ProfitChart';
 import { PriceChart } from '@/components/main/PriceChart';
 import { TradeDetails } from '@/components/main/TradeDetails';
 import { CoinSearch } from '@/components/main/CoinSearch';
+import { FearGreedIndex } from '@/components/main/FearGreedIndex';
 
 export default function Home() {
   const { data: trades = [] } = useTrades();
@@ -15,7 +16,10 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold">암호화폐 AI 트레이딩 대시보드</h1>
+      <div className="flex items-center gap-4 flex-wrap">
+        <h1 className="text-3xl font-bold">암호화폐 AI 트레이딩 대시보드</h1>
+        <FearGreedIndex />
+      </div>
 
       {/* 거래 상세 정보 - 맨 상단 */}
       <Card>
