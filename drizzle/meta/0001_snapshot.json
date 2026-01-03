@@ -1,0 +1,294 @@
+{
+  "id": "7025922b-2b9c-4e8d-8a8a-1b54771ffe56",
+  "prevId": "ce6ff442-e9e2-46b8-99e3-d61009b089f4",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.trade_history": {
+      "name": "trade_history",
+      "schema": "",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_pk": {
+          "name": "user_pk",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coin": {
+          "name": "coin",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trading_mode": {
+          "name": "trading_mode",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datetime": {
+          "name": "datetime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decision": {
+          "name": "decision",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fear_and_greed": {
+          "name": "fear_and_greed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "krw_balance": {
+          "name": "krw_balance",
+          "type": "numeric(20, 8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coin_balance": {
+          "name": "coin_balance",
+          "type": "numeric(20, 8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action_result": {
+          "name": "action_result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "trade_history_user_pk_users_pk_fk": {
+          "name": "trade_history_user_pk_users_pk_fk",
+          "tableFrom": "trade_history",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_pk"
+          ],
+          "columnsTo": [
+            "pk"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.trading_settings": {
+      "name": "trading_settings",
+      "schema": "",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_pk": {
+          "name": "user_pk",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coin": {
+          "name": "coin",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rsi_buy_threshold": {
+          "name": "rsi_buy_threshold",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 30
+        },
+        "rsi_sell_threshold": {
+          "name": "rsi_sell_threshold",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 70
+        },
+        "investment_percent": {
+          "name": "investment_percent",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'5.00'"
+        },
+        "stop_loss_percent": {
+          "name": "stop_loss_percent",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'-3.00'"
+        },
+        "take_profit_percent": {
+          "name": "take_profit_percent",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'6.00'"
+        },
+        "is_auto_trading": {
+          "name": "is_auto_trading",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "trading_interval": {
+          "name": "trading_interval",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 5
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "trading_settings_user_pk_users_pk_fk": {
+          "name": "trading_settings_user_pk_users_pk_fk",
+          "tableFrom": "trading_settings",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_pk"
+          ],
+          "columnsTo": [
+            "pk"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "trading_settings_user_pk_unique": {
+          "name": "trading_settings_user_pk_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_pk"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_id_unique": {
+          "name": "users_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
