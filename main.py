@@ -116,12 +116,15 @@ def execute_trade():
     percentage = result.get("percentage", 0) / 100
     print(f"### Investment Percentage: {percentage*100}% ###")
     
+    trade_executed = False
+    
     if result["decision"] == "buy":
         amount = my_krw * percentage * 0.997  # 수수료 고려
         
         if amount > 5000:  # 최소 주문액 확인
             print(f"### Buy Order: {amount:,.0f} KRW ###")
             bithumb.buy_market_order("KRW-BTC", amount)
+            trade_executed = True
         else:
             print(f"### Buy Failed: Amount ({amount:,.0f} KRW) below minimum ###")
 
@@ -132,11 +135,20 @@ def execute_trade():
         if value > 5000:  # 최소 주문액 확인
             print(f"### Sell Order: {btc_amount} BTC ###")
             bithumb.sell_market_order("KRW-BTC", btc_amount)
+            trade_executed = True
         else:
             print(f"### Sell Failed: Value ({value:,.0f} KRW) below minimum ###")
 
     elif result["decision"] == "hold":
         print("### Hold Position ###")
+    
+    # 거래 실행 후 잔고 재확인
+    if trade_executed:
+        import time
+        time.sleep(2)  # 거래 처리 대기
+        my_krw = bithumb.get_balance("KRW")
+        my_btc = bithumb.get_balance("BTC")
+        current_price = python_bithumb.get_current_price("KRW-BTC")
     
     # DB에 거래 기록 저장
     portfolio_value = my_krw + (my_btc * current_price)
