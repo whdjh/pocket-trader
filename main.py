@@ -4,6 +4,7 @@ import requests
 from dotenv import load_dotenv
 import python_bithumb
 from openai import OpenAI
+import psycopg2
 
 # .env 파일에서 API 키 로드
 load_dotenv()
@@ -136,6 +137,22 @@ def execute_trade():
 
     elif result["decision"] == "hold":
         print("### Hold Position ###")
+    
+    # DB에 거래 기록 저장
+    portfolio_value = my_krw + (my_btc * current_price)
+    try:
+        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO trades (decision, percentage, btc_price, btc_balance, krw_balance, portfolio_value, reason)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (result["decision"], result.get("percentage", 0), current_price, my_btc, my_krw, portfolio_value, result.get("reason")))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print(f"DB 저장 성공")
+    except Exception as e:
+        print(f"DB 저장 실패: {e}")
 
 # 실행
 if __name__ == "__main__":
