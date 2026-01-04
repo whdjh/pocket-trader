@@ -10,4 +10,5 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "pyupbit>=0.2.34",
     "schedule",
+    "psycopg2-binary>=2.9.0",
 ]
