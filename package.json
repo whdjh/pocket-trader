@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:create-table": "tsx scripts/create-table.ts"
+    "db:create-table": "tsx scripts/create-table.ts",
+    "trade": "tsx src/lib/business/executor.ts"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",
@@ -28,6 +29,7 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
+    "openai": "^6.15.0",
     "postgres": "^3.4.7",
     "react": "19.2.3",
     "react-dom": "19.2.3",
