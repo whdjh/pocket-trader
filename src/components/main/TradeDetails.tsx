@@ -1,10 +1,10 @@
-import { format } from 'date-fns';
-import { type Trade } from '@/lib/hooks/queries/useTrades';
+import { format } from 'date-fns'
+import { type Trade } from '@/lib/hooks/queries/useTrades'
 
 interface TradeDetailsProps {
-  trades: Trade[];
-  selectedIndex: number;
-  onSelectChange: (index: number) => void;
+  trades: Trade[]
+  selectedIndex: number
+  onSelectChange: (index: number) => void
 }
 
 export function TradeDetails({
@@ -17,17 +17,17 @@ export function TradeDetails({
       <div className="text-center text-muted-foreground py-8">
         거래 데이터가 없습니다.
       </div>
-    );
+    )
   }
 
-  const selectedTrade = trades[selectedIndex] || trades[0];
+  const selectedTrade = trades[selectedIndex] || trades[0]
 
   if (!selectedTrade) {
     return (
       <div className="text-center text-muted-foreground py-8">
         거래 데이터를 불러올 수 없습니다.
       </div>
-    );
+    )
   }
 
   return (
@@ -91,6 +91,6 @@ export function TradeDetails({
         </div>
       </div>
     </div>
-  );
+  )
 }
 

@@ -1,30 +1,30 @@
-'use client';
+'use client'
 
-import { useState, useMemo } from 'react';
-import { Input } from '@/components/ui/input';
-import { useCoins } from '@/lib/hooks/queries/useCoins';
+import { useState, useMemo } from 'react'
+import { Input } from '@/components/ui/input'
+import { useCoins } from '@/lib/hooks/queries/useCoins'
 
 interface CoinSearchProps {
-  selectedCoin: string;
-  onCoinChange: (coin: string) => void;
+  selectedCoin: string
+  onCoinChange: (coin: string) => void
 }
 
 export function CoinSearch({ selectedCoin, onCoinChange }: CoinSearchProps) {
-  const { data: coins = [] } = useCoins();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { data: coins = [] } = useCoins()
+  const [searchQuery, setSearchQuery] = useState('')
 
   // 검색 필터링
   const filteredCoins = useMemo(() => {
     if (!searchQuery) {
-      return coins.slice(0, 20); // 검색어가 없으면 상위 20개만 표시
+      return coins.slice(0, 20) // 검색어가 없으면 상위 20개만 표시
     }
 
-    const query = searchQuery.toUpperCase();
+    const query = searchQuery.toUpperCase()
     return coins.filter(
       (coin) =>
         coin.symbol.includes(query) || coin.name.includes(query)
-    );
-  }, [coins, searchQuery]);
+    )
+  }, [coins, searchQuery])
 
   return (
     <div className="relative">
@@ -46,8 +46,8 @@ export function CoinSearch({ selectedCoin, onCoinChange }: CoinSearchProps) {
               <button
                 key={coin.symbol}
                 onClick={() => {
-                  onCoinChange(coin.symbol);
-                  setSearchQuery('');
+                  onCoinChange(coin.symbol)
+                  setSearchQuery('')
                 }}
                 className={`w-full text-left px-3 py-2 hover:bg-muted transition-colors ${selectedCoin === coin.symbol ? 'bg-muted' : ''
                   }`}
@@ -73,6 +73,6 @@ export function CoinSearch({ selectedCoin, onCoinChange }: CoinSearchProps) {
         </div>
       )}
     </div>
-  );
+  )
 }
 

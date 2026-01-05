@@ -1,4 +1,4 @@
-import { pgTable, serial, text, numeric, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, numeric, timestamp } from 'drizzle-orm/pg-core'
 
 export const trades = pgTable('trades', {
   id: serial('id').primaryKey(),
@@ -12,5 +12,4 @@ export const trades = pgTable('trades', {
   profit_loss: numeric('profit_loss'),
   profit_loss_pct: numeric('profit_loss_pct'),
   reason: text('reason'),
-});
-
+})

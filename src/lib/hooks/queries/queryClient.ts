@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query'
 
 /** React Query 클라이언트 설정 */
 export const queryClient = new QueryClient({
@@ -12,5 +12,5 @@ export const queryClient = new QueryClient({
       retry: 1,
     },
   },
-});
+})
 

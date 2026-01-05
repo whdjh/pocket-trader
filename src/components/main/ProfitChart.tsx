@@ -1,21 +1,21 @@
-import { format } from 'date-fns';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { type Trade } from '@/lib/hooks/queries/useTrades';
+import { format } from 'date-fns'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { type Trade } from '@/lib/hooks/queries/useTrades'
 
 interface ProfitChartProps {
-  trades: Trade[];
+  trades: Trade[]
 }
 
 export function ProfitChart({ trades }: ProfitChartProps) {
   // 시간순으로 정렬
-  const sortedTrades = [...trades].reverse();
+  const sortedTrades = [...trades].reverse()
 
   const chartData = sortedTrades.map((trade) => ({
     time: format(new Date(trade.timestamp), 'MM/dd HH:mm'),
     timestamp: trade.timestamp,
     수익률: Number(trade.profit_loss_pct),
     decision: trade.decision,
-  }));
+  }))
 
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -33,8 +33,8 @@ export function ProfitChart({ trades }: ProfitChartProps) {
         <Tooltip
           formatter={(value: number | undefined) => value !== undefined ? [`${value.toFixed(2)}%`, '수익률'] : ['', '']}
           labelFormatter={(label) => {
-            const trade = sortedTrades.find(t => format(new Date(t.timestamp), 'MM/dd HH:mm') === label);
-            return trade ? format(new Date(trade.timestamp), 'yyyy-MM-dd HH:mm') : label;
+            const trade = sortedTrades.find(t => format(new Date(t.timestamp), 'MM/dd HH:mm') === label)
+            return trade ? format(new Date(trade.timestamp), 'yyyy-MM-dd HH:mm') : label
           }}
           contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
         />
@@ -59,6 +59,6 @@ export function ProfitChart({ trades }: ProfitChartProps) {
         />
       </LineChart>
     </ResponsiveContainer>
-  );
+  )
 }
 
