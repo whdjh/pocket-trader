@@ -1,18 +1,18 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTrades } from '@/lib/hooks/queries/useTrades';
-import { ProfitChart } from '@/components/main/ProfitChart';
-import { PriceChart } from '@/components/main/PriceChart';
-import { TradeDetails } from '@/components/main/TradeDetails';
-import { CoinSearch } from '@/components/main/CoinSearch';
-import { FearGreedIndex } from '@/components/main/FearGreedIndex';
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useTrades } from '@/lib/hooks/queries/useTrades'
+import { ProfitChart } from '@/components/main/ProfitChart'
+import { PriceChart } from '@/components/main/PriceChart'
+import { TradeDetails } from '@/components/main/TradeDetails'
+import { CoinSearch } from '@/components/main/CoinSearch'
+import { FearGreedIndex } from '@/components/main/FearGreedIndex'
 
 export default function Home() {
-  const { data: trades = [] } = useTrades();
-  const [selectedTrade, setSelectedTrade] = useState<number>(0);
-  const [selectedCoin, setSelectedCoin] = useState<string>('BTC');
+  const { data: trades = [] } = useTrades()
+  const [selectedTrade, setSelectedTrade] = useState<number>(0)
+  const [selectedCoin, setSelectedCoin] = useState<string>('BTC')
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -61,5 +61,5 @@ export default function Home() {
         </Card>
       </div>
     </div>
-  );
+  )
 }
