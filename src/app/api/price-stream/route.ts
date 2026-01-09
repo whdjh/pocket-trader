@@ -28,23 +28,24 @@ export async function GET(request: NextRequest) {
       // 즉시 첫 번째 가격 데이터 가져오기
       const fetchAndSendPrice = async () => {
         try {
+          const market = `KRW-${coin}`;
           const response = await fetch(
-            `https://api.bithumb.com/public/ticker/${coin}_KRW`,
+            `https://api.upbit.com/v1/ticker?markets=${market}`,
             {
               cache: 'no-store',
             }
           );
 
           if (!response.ok) {
-            throw new Error(`Bithumb API error: ${response.status}`);
+            throw new Error(`Upbit API error: ${response.status}`);
           }
 
           const data = await response.json();
 
-          if (data.status === '0000' && data.data) {
+          if (Array.isArray(data) && data.length > 0 && data[0].trade_price) {
             send({
               symbol: coin,
-              price: parseFloat(data.data.closing_price),
+              price: data[0].trade_price,
               timestamp: new Date().toISOString(),
             });
           }
@@ -56,26 +57,27 @@ export async function GET(request: NextRequest) {
       // 즉시 첫 번째 가격 가져오기
       fetchAndSendPrice();
 
-      // 주기적으로 빗썸 API 호출하여 가격 업데이트
+      // 주기적으로 업비트 API 호출하여 가격 업데이트
       intervalId = setInterval(async () => {
         try {
+          const market = `KRW-${coin}`;
           const response = await fetch(
-            `https://api.bithumb.com/public/ticker/${coin}_KRW`,
+            `https://api.upbit.com/v1/ticker?markets=${market}`,
             {
               cache: 'no-store',
             }
           );
 
           if (!response.ok) {
-            throw new Error(`Bithumb API error: ${response.status}`);
+            throw new Error(`Upbit API error: ${response.status}`);
           }
 
           const data = await response.json();
 
-          if (data.status === '0000' && data.data) {
+          if (Array.isArray(data) && data.length > 0 && data[0].trade_price) {
             send({
               symbol: coin,
-              price: parseFloat(data.data.closing_price),
+              price: data[0].trade_price,
               timestamp: new Date().toISOString(),
             });
           }
