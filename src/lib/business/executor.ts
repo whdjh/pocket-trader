@@ -1,7 +1,7 @@
 // 명령어: npm run trade
 // TODO: 주기적으로 실행하는 코드 추가 예정
 import 'dotenv/config'
-import { getOHLCV, getCurrentPrice, getBalance, buyMarketOrder, sellMarketOrder, getBithumbConfigFromEnv } from './bithumb'
+import * as upbit from './upbit'
 import { getCryptoNewsFromEnv } from './serpapi'
 import { analyzeTradingDecisionFromEnv } from './trading-ai'
 import { db } from '../db'
@@ -13,18 +13,30 @@ const MIN_ORDER_AMOUNT = 5000
 // 수수료율 (0.3%)
 const FEE_RATE = 0.003
 
-/**
- * 거래 실행 함수
- */
+// 환경변수에서 거래할 코인 선택 (기본값: BTC)
+function getTradingCoinFromEnv(): string {
+  const coin = process.env.TRADING_COIN?.toUpperCase() || 'BTC'
+  return `KRW-${coin}`
+}
+
+// 마켓에서 코인 심볼 추출 (예: KRW-BTC -> BTC)
+function getCoinSymbol(market: string): string {
+  return market.replace('KRW-', '')
+}
+
+// 거래 실행 함수
 export async function executeTrade(): Promise<void> {
-  console.log('🚀 거래 실행 시작...\n')
+  const market = getTradingCoinFromEnv()
+  const coinSymbol = getCoinSymbol(market)
+
+  console.log(`🚀 거래 실행 시작... (거래소: UPBIT, 코인: ${coinSymbol})\n`)
 
   try {
     // 1. 차트 데이터 수집
-    console.log('1️⃣ 차트 데이터 수집 중...')
-    const shortTermData = await getOHLCV('KRW-BTC', 'minute60', 24)
-    const midTermData = await getOHLCV('KRW-BTC', 'minute240', 30)
-    const longTermData = await getOHLCV('KRW-BTC', 'day', 30)
+    console.log(`1️⃣ 차트 데이터 수집 중... (${coinSymbol})`)
+    const shortTermData = await upbit.getOHLCV(market, 'minute60', 24)
+    const midTermData = await upbit.getOHLCV(market, 'minute240', 30)
+    const longTermData = await upbit.getOHLCV(market, 'day', 30)
     console.log(`✅ 차트 데이터 수집 완료\n`)
 
     // 2. 뉴스 데이터 수집
@@ -42,15 +54,15 @@ export async function executeTrade(): Promise<void> {
     )
     console.log(`✅ AI 분석 완료\n`)
 
-    // 4. 빗썸 API 연결 및 잔고 확인
-    console.log('4️⃣ 잔고 확인 중...')
-    const config = getBithumbConfigFromEnv()
-    const myKrw = await getBalance('KRW', config)
-    const myBtc = await getBalance('BTC', config)
-    const currentPrice = await getCurrentPrice('KRW-BTC')
+    // 4. 업비트 API 연결 및 잔고 확인
+    console.log(`4️⃣ 잔고 확인 중... (UPBIT, ${coinSymbol})`)
+    const config = upbit.getUpbitConfigFromEnv()
+    const myKrw = await upbit.getBalance('KRW', config)
+    const myCoin = await upbit.getBalance(coinSymbol, config)
+    const currentPrice = await upbit.getCurrentPrice(market)
     console.log(`✅ KRW 잔고: ${myKrw.toLocaleString()} KRW`)
-    console.log(`✅ BTC 잔고: ${myBtc} BTC`)
-    console.log(`✅ BTC 현재가: ${currentPrice.toLocaleString()} KRW\n`)
+    console.log(`✅ ${coinSymbol} 잔고: ${myCoin} ${coinSymbol}`)
+    console.log(`✅ ${coinSymbol} 현재가: ${currentPrice.toLocaleString()} KRW\n`)
 
     // 5. 결정 출력
     console.log('📊 AI 결정:')
@@ -61,7 +73,7 @@ export async function executeTrade(): Promise<void> {
     // 6. 거래 실행
     const percentage = decision.percentage / 100
     let finalKrw = myKrw
-    let finalBtc = myBtc
+    let finalCoin = myCoin
     let finalPrice = currentPrice
 
     if (decision.decision === 'buy') {
@@ -69,35 +81,35 @@ export async function executeTrade(): Promise<void> {
 
       if (amount > MIN_ORDER_AMOUNT) {
         console.log(`💰 매수 주문: ${Math.floor(amount).toLocaleString()} KRW`)
-        await buyMarketOrder('KRW-BTC', amount, config)
+        await upbit.buyMarketOrder(market, amount, config)
         console.log('✅ 매수 주문 완료\n')
 
         // 거래 처리 대기
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
         // 잔고 재확인
-        finalKrw = await getBalance('KRW', config)
-        finalBtc = await getBalance('BTC', config)
-        finalPrice = await getCurrentPrice('KRW-BTC')
+        finalKrw = await upbit.getBalance('KRW', config)
+        finalCoin = await upbit.getBalance(coinSymbol, config)
+        finalPrice = await upbit.getCurrentPrice(market)
       } else {
         console.log(`⚠️ 매수 실패: 금액 (${Math.floor(amount).toLocaleString()} KRW)이 최소 주문액(${MIN_ORDER_AMOUNT.toLocaleString()} KRW) 미만입니다\n`)
       }
     } else if (decision.decision === 'sell') {
-      const btcAmount = myBtc * percentage * (1 - FEE_RATE)
-      const value = btcAmount * currentPrice
+      const coinAmount = myCoin * percentage * (1 - FEE_RATE)
+      const value = coinAmount * currentPrice
 
       if (value > MIN_ORDER_AMOUNT) {
-        console.log(`💰 매도 주문: ${btcAmount.toFixed(8)} BTC`)
-        await sellMarketOrder('KRW-BTC', btcAmount, config)
+        console.log(`💰 매도 주문: ${coinAmount.toFixed(8)} ${coinSymbol}`)
+        await upbit.sellMarketOrder(market, coinAmount, config)
         console.log('✅ 매도 주문 완료\n')
 
         // 거래 처리 대기
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
         // 잔고 재확인
-        finalKrw = await getBalance('KRW', config)
-        finalBtc = await getBalance('BTC', config)
-        finalPrice = await getCurrentPrice('KRW-BTC')
+        finalKrw = await upbit.getBalance('KRW', config)
+        finalCoin = await upbit.getBalance(coinSymbol, config)
+        finalPrice = await upbit.getCurrentPrice(market)
       } else {
         console.log(`⚠️ 매도 실패: 가치 (${Math.floor(value).toLocaleString()} KRW)이 최소 주문액(${MIN_ORDER_AMOUNT.toLocaleString()} KRW) 미만입니다\n`)
       }
@@ -107,13 +119,13 @@ export async function executeTrade(): Promise<void> {
 
     // 7. DB에 거래 기록 저장
     console.log('5️⃣ DB 저장 중...')
-    const portfolioValue = finalKrw + finalBtc * finalPrice
+    const portfolioValue = finalKrw + finalCoin * finalPrice
 
     await db.insert(trades).values({
       decision: decision.decision,
       percentage: decision.percentage.toString(),
       btc_price: finalPrice.toString(),
-      btc_balance: finalBtc.toString(),
+      btc_balance: finalCoin.toString(),
       krw_balance: finalKrw.toString(),
       portfolio_value: portfolioValue.toString(),
       reason: decision.reason,
