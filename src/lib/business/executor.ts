@@ -2,8 +2,8 @@
 // TODO: 주기적으로 실행하는 코드 추가 예정
 import 'dotenv/config'
 import * as upbit from './upbit'
-import { getCryptoNewsFromEnv } from './serpapi'
-import { analyzeTradingDecisionFromEnv } from './trading-ai'
+import { getMultipleCoinsNewsFromEnv } from './serpapi'
+import { analyzeTradingDecisionFromEnv, selectBestCoinFromNews } from './trading-ai'
 import { db } from '../db'
 import { trades } from '../db/schema'
 
@@ -13,39 +13,66 @@ const MIN_ORDER_AMOUNT = 5000
 // 수수료율 (0.3%)
 const FEE_RATE = 0.003
 
-// 환경변수에서 거래할 코인 선택 (기본값: BTC)
-function getTradingCoinFromEnv(): string {
-  const coin = process.env.TRADING_COIN?.toUpperCase() || 'BTC'
-  return `KRW-${coin}`
-}
-
-// 마켓에서 코인 심볼 추출 (예: KRW-BTC -> BTC)
-function getCoinSymbol(market: string): string {
-  return market.replace('KRW-', '')
+// 코인 심볼을 마켓 형식으로 변환 (예: BTC -> KRW-BTC)
+function getMarketFromCoin(coinSymbol: string): string {
+  return `KRW-${coinSymbol}`
 }
 
 // 거래 실행 함수
 export async function executeTrade(): Promise<void> {
-  const market = getTradingCoinFromEnv()
-  const coinSymbol = getCoinSymbol(market)
-
-  console.log(`🚀 거래 실행 시작... (거래소: UPBIT, 코인: ${coinSymbol})\n`)
+  console.log('🚀 거래 실행 시작... (거래소: UPBIT)\n')
 
   try {
-    // 1. 차트 데이터 수집
-    console.log(`1️⃣ 차트 데이터 수집 중... (${coinSymbol})`)
+    // 1. 업비트에서 실제 거래 가능한 마켓 확인
+    console.log('1️⃣ 업비트 거래 가능 마켓 확인 중...')
+    const availableMarkets = await upbit.getAllMarkets()
+    const availableCoins = availableMarkets
+      .map((m) => m.replace('KRW-', ''))
+      .filter((coin) => ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOT', 'DOGE', 'AVAX', 'MATIC', 'LINK'].includes(coin))
+    console.log(`✅ 거래 가능 코인: ${availableCoins.join(', ')}\n`)
+
+    if (availableCoins.length === 0) {
+      throw new Error('거래 가능한 코인이 없습니다')
+    }
+
+    // 2. 여러 코인의 뉴스 수집 및 호재 분석
+    console.log('2️⃣ 여러 코인의 뉴스 수집 및 호재 분석 중...')
+    const newsByCoin = await getMultipleCoinsNewsFromEnv(availableCoins)
+    console.log(`✅ ${Object.keys(newsByCoin).length}개 코인의 뉴스 수집 완료\n`)
+
+    // 3. AI로 가장 호재가 있는 코인 선택
+    console.log('3️⃣ AI 호재 분석 중...')
+    const coinSelection = await selectBestCoinFromNews(newsByCoin)
+    const coinSymbol = coinSelection.coin
+    const market = getMarketFromCoin(coinSymbol)
+
+    // 선택된 코인이 업비트에서 지원되는지 확인
+    if (!availableCoins.includes(coinSymbol)) {
+      throw new Error(`선택된 코인 ${coinSymbol}은(는) 업비트에서 거래할 수 없습니다. 거래 가능 코인: ${availableCoins.join(', ')}`)
+    }
+
+    console.log(`✅ 선택된 코인: ${coinSymbol}`)
+    console.log(`   감정: ${coinSelection.sentiment}`)
+    console.log(`   이유: ${coinSelection.reason}\n`)
+
+    // 감정이 negative이면 거래하지 않음
+    if (coinSelection.sentiment === 'negative') {
+      console.log('⚠️ 선택된 코인의 뉴스 감정이 부정적입니다. 거래를 중단합니다.\n')
+      return
+    }
+
+    // 4. 선택된 코인의 차트 데이터 수집
+    console.log(`4️⃣ 차트 데이터 수집 중... (${coinSymbol})`)
     const shortTermData = await upbit.getOHLCV(market, 'minute60', 24)
     const midTermData = await upbit.getOHLCV(market, 'minute240', 30)
     const longTermData = await upbit.getOHLCV(market, 'day', 30)
     console.log(`✅ 차트 데이터 수집 완료\n`)
 
-    // 2. 뉴스 데이터 수집
-    console.log('2️⃣ 뉴스 데이터 수집 중...')
-    const newsArticles = await getCryptoNewsFromEnv(5)
-    console.log(`✅ 뉴스 ${newsArticles.length}개 수집 완료\n`)
+    // 5. 선택된 코인의 뉴스 가져오기
+    const newsArticles = newsByCoin[coinSymbol] || []
 
-    // 3. AI 분석
-    console.log('3️⃣ AI 분석 중...')
+    // 6. AI 거래 결정 분석
+    console.log('5️⃣ AI 거래 결정 분석 중...')
     const decision = await analyzeTradingDecisionFromEnv(
       shortTermData,
       midTermData,
@@ -54,8 +81,8 @@ export async function executeTrade(): Promise<void> {
     )
     console.log(`✅ AI 분석 완료\n`)
 
-    // 4. 업비트 API 연결 및 잔고 확인
-    console.log(`4️⃣ 잔고 확인 중... (UPBIT, ${coinSymbol})`)
+    // 7. 업비트 API 연결 및 잔고 확인
+    console.log(`6️⃣ 잔고 확인 중... (UPBIT, ${coinSymbol})`)
     const config = upbit.getUpbitConfigFromEnv()
     const myKrw = await upbit.getBalance('KRW', config)
     const myCoin = await upbit.getBalance(coinSymbol, config)
@@ -64,13 +91,13 @@ export async function executeTrade(): Promise<void> {
     console.log(`✅ ${coinSymbol} 잔고: ${myCoin} ${coinSymbol}`)
     console.log(`✅ ${coinSymbol} 현재가: ${currentPrice.toLocaleString()} KRW\n`)
 
-    // 5. 결정 출력
+    // 8. 결정 출력
     console.log('📊 AI 결정:')
     console.log(`   결정: ${decision.decision.toUpperCase()}`)
     console.log(`   비율: ${decision.percentage}%`)
     console.log(`   이유: ${decision.reason}\n`)
 
-    // 6. 거래 실행
+    // 9. 거래 실행
     const percentage = decision.percentage / 100
     let finalKrw = myKrw
     let finalCoin = myCoin
@@ -117,8 +144,8 @@ export async function executeTrade(): Promise<void> {
       console.log('⏸️ 보유 유지\n')
     }
 
-    // 7. DB에 거래 기록 저장
-    console.log('5️⃣ DB 저장 중...')
+    // 10. DB에 거래 기록 저장
+    console.log('7️⃣ DB 저장 중...')
     const portfolioValue = finalKrw + finalCoin * finalPrice
 
     await db.insert(trades).values({
