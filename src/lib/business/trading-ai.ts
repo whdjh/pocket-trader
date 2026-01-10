@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { OHLCVData } from './bithumb'
+import { OHLCVData } from './upbit'
 import { NewsArticle } from './serpapi'
 
 // 타입 정의
