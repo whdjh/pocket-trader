@@ -13,7 +13,7 @@ export function ProfitChart({ trades }: ProfitChartProps) {
   const chartData = sortedTrades.map((trade) => ({
     time: format(new Date(trade.timestamp), 'MM/dd HH:mm'),
     timestamp: trade.timestamp,
-    수익률: Number(trade.profit_loss_pct),
+    수익률: trade.profit_loss_pct !== null ? Number(trade.profit_loss_pct) : null,
     decision: trade.decision,
   }))
 

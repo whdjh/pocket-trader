@@ -58,12 +58,18 @@ export function TradeDetails({
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">비트코인 가격:</span>{' '}
+              <span className="text-muted-foreground">코인:</span>{' '}
+              <span className="font-medium">{selectedTrade.coin_symbol || 'N/A'}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">코인 가격:</span>{' '}
               <span className="font-medium">₩{selectedTrade.btc_price.toLocaleString()}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">거래 후 BTC 잔고:</span>{' '}
-              <span className="font-medium">{selectedTrade.btc_balance.toFixed(8)} BTC</span>
+              <span className="text-muted-foreground">거래 후 코인 잔고:</span>{' '}
+              <span className="font-medium">
+                {selectedTrade.btc_balance.toFixed(8)} {selectedTrade.coin_symbol || ''}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground">거래 후 KRW 잔고:</span>{' '}
@@ -75,9 +81,14 @@ export function TradeDetails({
             </div>
             <div>
               <span className="text-muted-foreground">수익률:</span>{' '}
-              <span className={`font-medium ${selectedTrade.profit_loss_pct >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}>
-                {selectedTrade.profit_loss_pct.toFixed(2)}%
+              <span className={`font-medium ${
+                selectedTrade.profit_loss_pct !== null 
+                  ? (selectedTrade.profit_loss_pct >= 0 ? 'text-green-600' : 'text-red-600')
+                  : 'text-muted-foreground'
+              }`}>
+                {selectedTrade.profit_loss_pct !== null 
+                  ? `${selectedTrade.profit_loss_pct.toFixed(2)}%`
+                  : 'N/A'}
               </span>
             </div>
           </div>
