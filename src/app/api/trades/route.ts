@@ -11,6 +11,7 @@ export async function GET() {
       ...trade,
       timestamp: trade.timestamp.toISOString(),
       percentage: Number(trade.percentage),
+      coin_symbol: trade.coin_symbol || null,
       btc_price: Number(trade.btc_price),
       btc_balance: Number(trade.btc_balance),
       krw_balance: Number(trade.krw_balance),

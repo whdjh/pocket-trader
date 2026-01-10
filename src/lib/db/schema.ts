@@ -5,6 +5,7 @@ export const trades = pgTable('trades', {
   timestamp: timestamp('timestamp').notNull().defaultNow(),
   decision: text('decision').notNull(), // 'buy', 'sell', 'hold'
   percentage: numeric('percentage').notNull(),
+  coin_symbol: text('coin_symbol'), // 거래한 코인 심볼 (예: 'BTC', 'ETH', 'SOL')
   btc_price: numeric('btc_price').notNull(),
   btc_balance: numeric('btc_balance').notNull(),
   krw_balance: numeric('krw_balance').notNull(),

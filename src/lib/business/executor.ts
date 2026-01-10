@@ -151,6 +151,7 @@ export async function executeTrade(): Promise<void> {
     await db.insert(trades).values({
       decision: decision.decision,
       percentage: decision.percentage.toString(),
+      coin_symbol: coinSymbol,
       btc_price: finalPrice.toString(),
       btc_balance: finalCoin.toString(),
       krw_balance: finalKrw.toString(),
