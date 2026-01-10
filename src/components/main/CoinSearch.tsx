@@ -58,7 +58,7 @@ export function CoinSearch({ selectedCoin, onCoinChange }: CoinSearchProps) {
                     ₩{coin.price.toLocaleString('ko-KR')}원
                   </span>
                 </div>
-                {coin.change24h !== 0 && (
+                {coin.change24h != null && coin.change24h !== 0 && (
                   <span
                     className={`text-xs ${coin.change24h >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}
