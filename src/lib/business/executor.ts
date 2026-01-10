@@ -29,7 +29,7 @@ export async function executeTrade(): Promise<void> {
 
     // 2. 뉴스 데이터 수집
     console.log('2️⃣ 뉴스 데이터 수집 중...')
-    const newsArticles = await getCryptoNewsFromEnv('cryptocurrency news', 5)
+    const newsArticles = await getCryptoNewsFromEnv(5)
     console.log(`✅ 뉴스 ${newsArticles.length}개 수집 완료\n`)
 
     // 3. AI 분석
@@ -60,7 +60,6 @@ export async function executeTrade(): Promise<void> {
 
     // 6. 거래 실행
     const percentage = decision.percentage / 100
-    let tradeExecuted = false
     let finalKrw = myKrw
     let finalBtc = myBtc
     let finalPrice = currentPrice
@@ -71,7 +70,6 @@ export async function executeTrade(): Promise<void> {
       if (amount > MIN_ORDER_AMOUNT) {
         console.log(`💰 매수 주문: ${Math.floor(amount).toLocaleString()} KRW`)
         await buyMarketOrder('KRW-BTC', amount, config)
-        tradeExecuted = true
         console.log('✅ 매수 주문 완료\n')
 
         // 거래 처리 대기
@@ -91,7 +89,6 @@ export async function executeTrade(): Promise<void> {
       if (value > MIN_ORDER_AMOUNT) {
         console.log(`💰 매도 주문: ${btcAmount.toFixed(8)} BTC`)
         await sellMarketOrder('KRW-BTC', btcAmount, config)
-        tradeExecuted = true
         console.log('✅ 매도 주문 완료\n')
 
         // 거래 처리 대기
