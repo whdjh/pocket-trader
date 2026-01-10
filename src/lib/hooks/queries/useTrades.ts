@@ -5,12 +5,13 @@ export interface Trade {
   timestamp: string
   decision: 'buy' | 'sell' | 'hold'
   percentage: number
+  coin_symbol: string | null
   btc_price: number
   btc_balance: number
   krw_balance: number
   portfolio_value: number
-  profit_loss: number
-  profit_loss_pct: number
+  profit_loss: number | null
+  profit_loss_pct: number | null
   reason: string
 }
 
