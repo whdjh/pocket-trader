@@ -1,0 +1,105 @@
+{
+  "id": "8fe4fcc1-ebcf-4a6a-bfe9-84c27ca47dec",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.trades": {
+      "name": "trades",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "decision": {
+          "name": "decision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "percentage": {
+          "name": "percentage",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coin_symbol": {
+          "name": "coin_symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "btc_price": {
+          "name": "btc_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "btc_balance": {
+          "name": "btc_balance",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "krw_balance": {
+          "name": "krw_balance",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "portfolio_value": {
+          "name": "portfolio_value",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profit_loss": {
+          "name": "profit_loss",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profit_loss_pct": {
+          "name": "profit_loss_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
