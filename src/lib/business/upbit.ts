@@ -185,7 +185,8 @@ async function privateApiRequest(
 export async function getOHLCV(
   market: string,
   interval: string,
-  count: number
+  count: number,
+  to?: string // 특정 시점 이전 데이터 가져오기 (ISO 8601 형식)
 ): Promise<OHLCVData[]> {
   let url: string
 
@@ -206,12 +207,16 @@ export async function getOHLCV(
   }
 
   try {
-    const response = await axios.get(url, {
-      params: {
-        market,
-        count: Math.min(count, 200), // 업비트 최대 200개
-      },
-    })
+    const params: Record<string, string> = {
+      market,
+      count: Math.min(count, 200).toString(), // 업비트 최대 200개
+    }
+
+    if (to) {
+      params.to = to
+    }
+
+    const response = await axios.get(url, { params })
 
     const candles = response.data as CandleInfo[]
 
