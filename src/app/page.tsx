@@ -6,18 +6,16 @@ import { useTrades } from '@/lib/hooks/queries/useTrades'
 import { ProfitChart } from '@/components/main/ProfitChart'
 import { PriceChart } from '@/components/main/PriceChart'
 import { TradeDetails } from '@/components/main/TradeDetails'
-import { CoinSearch } from '@/components/main/CoinSearch'
 import { FearGreedIndex } from '@/components/main/FearGreedIndex'
 
 export default function Home() {
   const { data: trades = [] } = useTrades()
   const [selectedTrade, setSelectedTrade] = useState<number>(0)
-  const [selectedCoin, setSelectedCoin] = useState<string>('BTC')
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4 flex-wrap">
-        <h1 className="text-3xl font-bold">암호화폐 AI 트레이딩 대시보드</h1>
+        <h1 className="text-3xl font-bold">AI 트레이딩 대시보드</h1>
         <FearGreedIndex />
       </div>
 
@@ -47,16 +45,13 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* 코인 가격 차트 - 검색 가능 */}
+        {/* 코인 가격 차트 - 리플(XRP) */}
         <Card>
           <CardHeader>
-            <div className="flex flex-col gap-3">
-              <CardTitle>가격 변화</CardTitle>
-              <CoinSearch selectedCoin={selectedCoin} onCoinChange={setSelectedCoin} />
-            </div>
+            <CardTitle>XRP 가격 변화</CardTitle>
           </CardHeader>
           <CardContent>
-            <PriceChart coin={selectedCoin} />
+            <PriceChart coin="XRP" />
           </CardContent>
         </Card>
       </div>
