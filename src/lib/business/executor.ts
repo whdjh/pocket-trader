@@ -17,7 +17,7 @@ const MIN_ORDER_AMOUNT = 5000
 // 수수료율 (0.3%)
 const FEE_RATE = 0.003
 
-// 테스트용 최대 코인 수량 (환경변수에서 설정)
+// 초기 보유량에서 이 값만큼만 거래 가능하고, 나머지는 최소 보유량으로 유지
 const MAX_COUNT_AMOUNT = parseInt(process.env.MAX_COUNT_AMOUNT || '0', 10)
 
 // 코인 심볼을 마켓 형식으로 변환
@@ -59,32 +59,55 @@ export async function executeTrade(): Promise<void> {
     // 5. 업비트 API 연결 및 잔고 확인
     console.log(`잔고 확인 중... (UPBIT, ${coinSymbol})`)
     const config = upbit.getUpbitConfigFromEnv()
-    const myKrw = await upbit.getBalance('KRW', config)
-    const myCoin = await upbit.getBalance(coinSymbol, config)
     const currentPrice = await upbit.getCurrentPrice(market)
+    const actualKrw = await upbit.getBalance('KRW', config)
+    const actualCoin = await upbit.getBalance(coinSymbol, config)
 
-    // 초기 보유량 추정: DB에서 첫 거래 기록 조회
-    const firstTrade = await db.select().from(trades).orderBy(asc(trades.timestamp)).limit(1)
-    const initialCoinBalance = firstTrade.length > 0
-      ? parseFloat(firstTrade[0].btc_balance)
-      : myCoin // 첫 거래가 없으면 현재 보유량을 초기값으로 사용
+    // DB에서 최신 거래 기록 조회하여 현재 가상 잔고 계산
+    const allTrades = await db.select().from(trades).orderBy(asc(trades.timestamp))
+    const isFirstRun = allTrades.length === 0
+
+    // 초기 보유량: 첫 실행 시 업비트에서 가져온 실제 보유량, 이후에는 DB의 첫 거래 기록에서 가져옴
+    let initialCoinBalance: number
+    if (isFirstRun) {
+      // 첫 실행: 업비트에서 가져온 실제 보유량을 초기 보유량으로 설정
+      initialCoinBalance = actualCoin
+    } else {
+      // 이후 실행: DB의 첫 거래 기록에서 초기 보유량 가져오기
+      const firstTrade = allTrades[0]
+      initialCoinBalance = parseFloat(firstTrade.btc_balance)
+    }
+
+    // 현재 가상 잔고: DB에 거래 기록이 있으면 최신 잔고 사용, 없으면 업비트 실제 잔고 사용
+    let myCoin = actualCoin
+    let myKrw = actualKrw
+    if (allTrades.length > 0) {
+      const latestTrade = allTrades[allTrades.length - 1]
+      myCoin = parseFloat(latestTrade.btc_balance)
+      myKrw = parseFloat(latestTrade.krw_balance)
+    }
 
     // 최소 보유량 계산:
-    // - 초기 보유량 >= MAX_COUNT_AMOUNT: 최소 보유량 = 초기 보유량 - MAX_COUNT_AMOUNT (예: 1001개면 최소 1개 유지)
+    // - 초기 보유량 >= MAX_COUNT_AMOUNT: 최소 보유량 = 초기 보유량 - MAX_COUNT_AMOUNT
+    //   예: 초기 보유량 2000개, MAX_COUNT_AMOUNT 1000 → 최소 보유량 1000개, 거래 가능 1000개
     // - 초기 보유량 < MAX_COUNT_AMOUNT: 최소 보유량 = 0 (전체 보유량 사용 가능)
+    //   예: 초기 보유량 500개, MAX_COUNT_AMOUNT 1000 → 최소 보유량 0개, 거래 가능 500개
     const minCoinBalance = Math.max(0, initialCoinBalance - MAX_COUNT_AMOUNT)
 
     // 사용 가능한 코인: 현재 보유량 - 최소 보유량
-    // 초기 보유량이 MAX_COUNT_AMOUNT 이상이면 최소 보유량만큼 남기고 거래 가능
-    // 초기 보유량이 MAX_COUNT_AMOUNT 미만이면 전체 보유량 사용 가능
     const effectiveCoinBalance = Math.max(0, myCoin - minCoinBalance)
 
-    console.log(`KRW 잔고: ${myKrw.toLocaleString()} KRW`)
-    console.log(`${coinSymbol} 실제 잔고: ${myCoin} ${coinSymbol}`)
-    console.log(`${coinSymbol} 초기 보유량: ${initialCoinBalance.toLocaleString()} ${coinSymbol}`)
+    console.log(`초기 보유량: ${initialCoinBalance.toLocaleString()} ${coinSymbol} (업비트에서 가져옴)`)
+    console.log(`최대 거래 가능 수량: ${MAX_COUNT_AMOUNT > 0 ? MAX_COUNT_AMOUNT.toLocaleString() : '제한 없음'} ${coinSymbol}`)
+    console.log(`현재 가상 잔고: ${myCoin.toLocaleString()} ${coinSymbol}, ${myKrw.toLocaleString()} KRW`)
     console.log(`${coinSymbol} 최소 보유량: ${minCoinBalance.toLocaleString()} ${coinSymbol}`)
-    console.log(`${coinSymbol} 사용 가능: ${effectiveCoinBalance.toLocaleString()} ${coinSymbol} (최대 ${MAX_COUNT_AMOUNT.toLocaleString()}개)`)
-    console.log(`${coinSymbol} 현재가: ${currentPrice.toLocaleString()} KRW\n`)
+    console.log(`${coinSymbol} 사용 가능: ${effectiveCoinBalance.toLocaleString()} ${coinSymbol}`)
+    console.log(`${coinSymbol} 현재가: ${currentPrice.toLocaleString()} KRW`)
+    if (isFirstRun) {
+      console.log(`첫 실행: 매수 불가 (초기 보유량만 보유, KRW 잔고 없음)\n`)
+    } else {
+      console.log('')
+    }
 
     // 8. 결정 출력
     console.log('AI 결정:')
@@ -99,34 +122,46 @@ export async function executeTrade(): Promise<void> {
     let finalPrice = currentPrice
 
     if (decision.decision === 'buy') {
-      const amount = myKrw * percentage * (1 - FEE_RATE)
-
-      if (amount > MIN_ORDER_AMOUNT) {
-        console.log(`매수 주문: ${Math.floor(amount).toLocaleString()} KRW`)
-        await upbit.buyMarketOrder(market, amount, config)
-        console.log('매수 주문 완료\n')
-
-        // 거래 처리 대기
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-
-        // 잔고 재확인
-        finalKrw = await upbit.getBalance('KRW', config)
-        finalCoin = await upbit.getBalance(coinSymbol, config)
-        finalPrice = await upbit.getCurrentPrice(market)
+      // 첫 실행 시에는 매수 불가 (초기 보유량만 보유, KRW 잔고 없음)
+      if (isFirstRun) {
+        console.log(`매수 불가: 첫 실행에서는 초기 보유량(${initialCoinBalance.toLocaleString()} ${coinSymbol})만 보유하고 있습니다. 매수할 KRW 잔고가 없습니다.\n`)
+        console.log('보유 유지로 처리합니다.\n')
+        // 결정을 hold로 변경
+        decision.decision = 'hold'
+        decision.percentage = 0
       } else {
-        console.log(`매수 실패: 금액 (${Math.floor(amount).toLocaleString()} KRW)이 최소 주문액(${MIN_ORDER_AMOUNT.toLocaleString()} KRW) 미만입니다\n`)
+        const amount = myKrw * percentage * (1 - FEE_RATE)
+
+        if (amount > MIN_ORDER_AMOUNT) {
+          console.log(`매수 주문: ${Math.floor(amount).toLocaleString()} KRW`)
+          await upbit.buyMarketOrder(market, amount, config)
+          console.log('매수 주문 완료\n')
+
+          // 거래 처리 대기
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+
+          // 잔고 재확인
+          const actualKrw = await upbit.getBalance('KRW', config)
+          const actualCoin = await upbit.getBalance(coinSymbol, config)
+
+          // 가상 잔고 업데이트: 실제 거래 반영
+          finalKrw = actualKrw
+          finalCoin = actualCoin
+          finalPrice = await upbit.getCurrentPrice(market)
+        } else {
+          console.log(`매수 실패: 금액 (${Math.floor(amount).toLocaleString()} KRW)이 최소 주문액(${MIN_ORDER_AMOUNT.toLocaleString()} KRW) 미만입니다\n`)
+        }
       }
     } else if (decision.decision === 'sell') {
       // 사용 가능한 코인이 없으면 매도하지 않음
       if (effectiveCoinBalance <= 0) {
         console.log(`매도 실패: 사용 가능한 코인이 없습니다 (${effectiveCoinBalance.toLocaleString()} ${coinSymbol})\n`)
       } else {
-        // 테스트용: 실제 보유량 대신 테스트용 잔고 사용
         const coinAmount = effectiveCoinBalance * percentage * (1 - FEE_RATE)
         const value = coinAmount * currentPrice
 
         if (value > MIN_ORDER_AMOUNT) {
-          console.log(`매도 주문: ${coinAmount.toFixed(8)} ${coinSymbol} (테스트용 잔고 기준)`)
+          console.log(`매도 주문: ${coinAmount.toFixed(8)} ${coinSymbol}`)
           await upbit.sellMarketOrder(market, coinAmount, config)
           console.log('매도 주문 완료\n')
 
@@ -134,8 +169,12 @@ export async function executeTrade(): Promise<void> {
           await new Promise((resolve) => setTimeout(resolve, 2000))
 
           // 잔고 재확인
-          finalKrw = await upbit.getBalance('KRW', config)
-          finalCoin = await upbit.getBalance(coinSymbol, config)
+          const actualKrw = await upbit.getBalance('KRW', config)
+          const actualCoin = await upbit.getBalance(coinSymbol, config)
+
+          // 가상 잔고 업데이트: 실제 거래 반영
+          finalKrw = actualKrw
+          finalCoin = actualCoin
           finalPrice = await upbit.getCurrentPrice(market)
         } else {
           console.log(`매도 실패: 가치 (${Math.floor(value).toLocaleString()} KRW)이 최소 주문액(${MIN_ORDER_AMOUNT.toLocaleString()} KRW) 미만입니다\n`)
