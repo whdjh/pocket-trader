@@ -12,7 +12,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:create-table": "tsx scripts/create-table.ts",
-    "trade:schedule": "tsx src/lib/business/scheduler.ts",
+    "trade:schedule": "tsx src/lib/business/scheduler.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
