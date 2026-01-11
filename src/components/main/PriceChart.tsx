@@ -26,11 +26,32 @@ export function PriceChart({ coin }: PriceChartProps) {
   }
 
   // 차트 데이터 생성 (첫 유효 가격 이후의 모든 데이터 포함, 0원도 포함)
-  const chartData = validPriceData.map((data) => ({
-    time: format(new Date(data.timestamp), 'HH:mm:ss'),
-    timestamp: data.timestamp,
-    가격: data.price,
-  }))
+  // 데이터 간격을 확인하여 적절한 시간 형식 선택
+  const getTimeFormat = () => {
+    if (validPriceData.length < 2) return 'HH:mm:ss'
+    
+    const firstTime = new Date(validPriceData[0].timestamp).getTime()
+    const lastTime = new Date(validPriceData[validPriceData.length - 1].timestamp).getTime()
+    const timeDiff = lastTime - firstTime
+    const avgInterval = timeDiff / (validPriceData.length - 1)
+    
+    // 평균 간격이 1시간 이상이면 날짜 포함 표시
+    if (avgInterval >= 3600000) {
+      return 'MM-dd HH:mm'
+    }
+    return 'HH:mm:ss'
+  }
+
+  const timeFormat = getTimeFormat()
+  const chartData = validPriceData.map((data) => {
+    const timestamp = new Date(data.timestamp).getTime()
+    return {
+      time: format(new Date(data.timestamp), timeFormat),
+      timestamp: timestamp, // 숫자 타임스탬프 사용
+      timestampString: data.timestamp, // 원본 ISO 문자열
+      가격: data.price,
+    }
+  })
 
   // Y축 포맷 결정 (가격 범위에 따라) - 한국어 단위 사용
   const maxPrice = Math.max(...chartData.map((d) => d.가격))
@@ -56,9 +77,18 @@ export function PriceChart({ coin }: PriceChartProps) {
       <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
-          dataKey="time"
+          type="number"
+          dataKey="timestamp"
+          domain={['dataMin', 'dataMax']}
           tick={{ fontSize: 12 }}
-          interval="preserveStartEnd"
+          tickCount={10}
+          angle={0}
+          textAnchor="middle"
+          height={30}
+          tickFormatter={(value) => {
+            const year = new Date(value).getFullYear()
+            return year.toString()
+          }}
         />
         <YAxis
           tick={{ fontSize: 12 }}
@@ -69,8 +99,10 @@ export function PriceChart({ coin }: PriceChartProps) {
             value !== undefined ? [`₩${value.toLocaleString('ko-KR')}원`, `${coin} 가격 (원화)`] : ['', '']
           }
           labelFormatter={(label) => {
-            const data = chartData.find((d) => d.time === label)
-            return data ? format(new Date(data.timestamp), 'yyyy-MM-dd HH:mm:ss') : label
+            // label은 타임스탬프 숫자값
+            const timestamp = typeof label === 'number' ? label : parseFloat(label)
+            const data = chartData.find((d) => Math.abs(d.timestamp - timestamp) < 1000)
+            return data ? format(new Date(data.timestamp), 'yyyy-MM-dd HH:mm:ss') : format(new Date(timestamp), 'yyyy-MM-dd HH:mm:ss')
           }}
           contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
         />
