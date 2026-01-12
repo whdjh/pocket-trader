@@ -15,22 +15,10 @@ interface SerpApiResponse {
 }
 
 // 코인 심볼을 뉴스 검색용 이름으로 변환하는 맵
-const COIN_NAME_MAP: Record<string, string> = {
-  BTC: 'bitcoin',
-  ETH: 'ethereum',
-  SOL: 'solana',
-  XRP: 'ripple',
-  ADA: 'cardano',
-  DOT: 'polkadot',
-  DOGE: 'dogecoin',
-  AVAX: 'avalanche',
-  MATIC: 'polygon',
-  LINK: 'chainlink',
-  // 추가 코인들...
-}
+const COIN_NAME_MAP: Record<string, string> = { XRP: 'ripple' }
 
 // 주요 코인 목록 (호재 분석 대상)
-const MAJOR_COINS = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOT', 'DOGE', 'AVAX', 'MATIC', 'LINK']
+const MAJOR_COINS = ['XRP']
 
 // GetCryptoNewsParams 인터페이스 정의
 interface GetCryptoNewsParams {
@@ -100,7 +88,7 @@ export async function getCryptoNews(params: GetCryptoNewsParams & { coin?: strin
     coinName = COIN_NAME_MAP[coin.toUpperCase()] || coin.toLowerCase()
   } else {
     // 코인이 제공되지 않은 경우 기본값 사용 (하위 호환성)
-    coinName = 'bitcoin'
+    coinName = 'ripple'
   }
 
   // 해당 코인에 대한 뉴스 수집

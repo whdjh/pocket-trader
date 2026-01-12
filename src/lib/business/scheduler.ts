@@ -21,12 +21,12 @@ function formatWaitTime(ms: number): string {
 // 거래 실행 함수 (에러 처리 포함)
 async function runTradeWithErrorHandling(): Promise<void> {
   if (isRunning) {
-    console.log('⏸️ 이전 거래 실행이 아직 진행 중입니다. 건너뜁니다.')
+    console.log('이전 거래 실행이 아직 진행 중입니다. 건너뜁니다.')
     return
   }
 
   if (shouldStop) {
-    console.log('⏹️ 스케줄러가 중지되었습니다.')
+    console.log('스케줄러가 중지되었습니다.')
     return
   }
 
@@ -35,19 +35,19 @@ async function runTradeWithErrorHandling(): Promise<void> {
 
   try {
     console.log(`\n${'='.repeat(60)}`)
-    console.log(`🔄 자동거래 실행 시작 (${startTime.toLocaleString('ko-KR')})`)
+    console.log(`자동거래 실행 시작 (${startTime.toLocaleString('ko-KR')})`)
     console.log(`${'='.repeat(60)}\n`)
 
     await executeTrade()
 
     const endTime = new Date()
     const duration = (endTime.getTime() - startTime.getTime()) / 1000
-    console.log(`\n✅ 거래 실행 완료 (소요 시간: ${duration.toFixed(2)}초)`)
+    console.log(`\n거래 실행 완료 (소요 시간: ${duration.toFixed(2)}초)`)
   } catch (error) {
     const endTime = new Date()
     const duration = (endTime.getTime() - startTime.getTime()) / 1000
-    console.error(`\n❌ 거래 실행 중 오류 발생 (소요 시간: ${duration.toFixed(2)}초):`, error)
-    
+    console.error(`\n거래 실행 중 오류 발생 (소요 시간: ${duration.toFixed(2)}초):`, error)
+
     // 에러가 발생해도 다음 실행은 계속 진행
   } finally {
     isRunning = false
@@ -66,9 +66,9 @@ async function continuousTradeLoop(): Promise<void> {
 
     // 다음 실행까지 대기
     const nextRunTime = new Date(Date.now() + WAIT_MS)
-    
-    console.log(`\n⏳ 다음 실행까지 대기: ${formatWaitTime(WAIT_MS)}`)
-    console.log(`⏰ 다음 실행 예정 시간: ${nextRunTime.toLocaleString('ko-KR')}`)
+
+    console.log(`\n다음 실행까지 대기: ${formatWaitTime(WAIT_MS)}`)
+    console.log(`다음 실행 예정 시간: ${nextRunTime.toLocaleString('ko-KR')}`)
     console.log(`${'='.repeat(60)}\n`)
 
     // 대기 (중간에 중지 신호가 오면 빠져나감)
@@ -90,14 +90,14 @@ async function continuousTradeLoop(): Promise<void> {
 
 // 스케줄러 시작 함수
 export function startScheduler(): void {
-  console.log('\n🚀 자동거래 연속 실행 스케줄러 시작')
-  console.log(`⏱️  대기 시간: ${WAIT_MINUTES}분`)
-  console.log(`💡 대기 시간 변경: 환경변수 WAIT_MINUTES 설정`)
-  console.log(`🛑 중지: Ctrl+C\n`)
+  console.log('\n자동거래 연속 실행 스케줄러 시작')
+  console.log(`대기 시간: ${WAIT_MINUTES}분`)
+  console.log(`대기 시간 변경: 환경변수 WAIT_MINUTES 설정`)
+  console.log(`중지: Ctrl+C\n`)
 
   // 연속 실행 시작
   continuousTradeLoop().catch((error) => {
-    console.error('❌ 스케줄러 오류:', error)
+    console.error('스케줄러 오류:', error)
     process.exit(1)
   })
 }
@@ -108,40 +108,40 @@ if (require.main === module) {
 
   // 프로세스 종료 시그널 처리
   process.on('SIGINT', () => {
-    console.log('\n\n⏹️ 자동거래 스케줄러 종료 중...')
+    console.log('\n\n자동거래 스케줄러 종료 중...')
     shouldStop = true
-    
+
     // 실행 중이면 완료될 때까지 대기
     if (isRunning) {
-      console.log('⏳ 현재 실행 중인 거래가 완료될 때까지 대기합니다...')
+      console.log('현재 실행 중인 거래가 완료될 때까지 대기합니다...')
       const checkInterval = setInterval(() => {
         if (!isRunning) {
           clearInterval(checkInterval)
-          console.log('✅ 종료 완료')
+          console.log('종료 완료')
           process.exit(0)
         }
       }, 1000)
     } else {
-      console.log('✅ 종료 완료')
+      console.log('종료 완료')
       process.exit(0)
     }
   })
 
   process.on('SIGTERM', () => {
-    console.log('\n\n⏹️ 자동거래 스케줄러 종료 중...')
+    console.log('\n\n자동거래 스케줄러 종료 중...')
     shouldStop = true
-    
+
     if (isRunning) {
-      console.log('⏳ 현재 실행 중인 거래가 완료될 때까지 대기합니다...')
+      console.log('현재 실행 중인 거래가 완료될 때까지 대기합니다...')
       const checkInterval = setInterval(() => {
         if (!isRunning) {
           clearInterval(checkInterval)
-          console.log('✅ 종료 완료')
+          console.log('종료 완료')
           process.exit(0)
         }
       }, 1000)
     } else {
-      console.log('✅ 종료 완료')
+      console.log('종료 완료')
       process.exit(0)
     }
   })
