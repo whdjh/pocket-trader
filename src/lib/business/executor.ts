@@ -40,11 +40,9 @@ export async function executeTrade(): Promise<void> {
     console.log(`리플 뉴스 ${newsArticles.length}개 수집 완료\n`)
 
     // 3. 리플(XRP) 차트 데이터 수집
-    console.log(`차트 데이터 수집 중... (${coinSymbol})`)
     const shortTermData = await upbit.getOHLCV(market, 'minute60', 24)
     const midTermData = await upbit.getOHLCV(market, 'minute240', 30)
     const longTermData = await upbit.getOHLCV(market, 'day', 30)
-    console.log(`차트 데이터 수집 완료\n`)
 
     // 4. AI 거래 결정 분석
     console.log('AI 거래 결정 분석 중...')
@@ -105,17 +103,9 @@ export async function executeTrade(): Promise<void> {
     console.log(`${coinSymbol} 현재가: ${currentPrice.toLocaleString()} KRW`)
     if (isFirstRun) {
       console.log(`첫 실행: 매수 불가 (초기 보유량만 보유, KRW 잔고 없음)\n`)
-    } else {
-      console.log('')
     }
 
-    // 8. 결정 출력
-    console.log('AI 결정:')
-    console.log(`결정: ${decision.decision.toUpperCase()}`)
-    console.log(`비율: ${decision.percentage}%`)
-    console.log(`이유: ${decision.reason}\n`)
-
-    // 9. 거래 실행
+    // 8. 거래 실행
     const percentage = decision.percentage / 100
     let finalKrw = myKrw
     let finalCoin = myCoin
@@ -125,7 +115,6 @@ export async function executeTrade(): Promise<void> {
       // 첫 실행 시에는 매수 불가 (초기 보유량만 보유, KRW 잔고 없음)
       if (isFirstRun) {
         console.log(`매수 불가: 첫 실행에서는 초기 보유량(${initialCoinBalance.toLocaleString()} ${coinSymbol})만 보유하고 있습니다. 매수할 KRW 잔고가 없습니다.\n`)
-        console.log('보유 유지로 처리합니다.\n')
         // 결정을 hold로 변경
         decision.decision = 'hold'
         decision.percentage = 0
